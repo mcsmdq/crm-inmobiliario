@@ -1768,6 +1768,7 @@
           const client = google.accounts.oauth2.initTokenClient({
             client_id: GCAL_CLIENT_ID,
             scope: GCAL_SCOPE,
+            prompt: "consent",
             callback: (response) => {
               if (response.error) {
                 showToast(
@@ -1878,6 +1879,7 @@
             }
 
             const data = await res.json();
+            console.log("Respuesta Google Contacts:", JSON.stringify(data));
             allContacts = allContacts.concat(data.connections || []);
             pageToken = data.nextPageToken || null;
           } while (pageToken);
