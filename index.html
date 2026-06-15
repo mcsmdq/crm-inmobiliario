@@ -1168,6 +1168,16 @@
             <i class="ti ti-file-import" style="font-size: 14px"></i> Importar
             CSV
           </button>
+          <button
+            class="btn"
+            style="font-size: 12px; padding: 6px 10px"
+            onclick="syncGoogleContacts()"
+            title="Sincronizar Google Contacts"
+            id="syncContactsBtn"
+          >
+            <i class="ti ti-address-book" style="font-size: 14px"></i> Sync
+            Contacts
+          </button>
           <button class="btn-add" onclick="openAddModal()">
             <i class="ti ti-plus"></i> Agregar cliente
           </button>
@@ -1749,7 +1759,8 @@
       // ═══════════════════════════════════════════════════════════
       const GCAL_CLIENT_ID =
         "1046195562641-fud070si3ulhjldkuk5p9dn69593ok75.apps.googleusercontent.com";
-      const GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+      const GCAL_SCOPE =
+        "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/contacts.readonly";
       let gcalToken = null;
 
       async function connectCalendar() {
@@ -1821,6 +1832,152 @@
 
         showToast("Evento creado en Google Calendar ✓", "success");
         return true;
+      }
+
+      async function syncGoogleContacts() {
+        const btn = document.getElementById("syncContactsBtn");
+        btn.innerHTML =
+          '<i class="ti ti-loader" style="font-size:14px"></i> Sincronizando...';
+        btn.disabled = true;
+
+        // Pedir token si no hay (reutiliza el mismo OAuth que Calendar)
+        if (!gcalToken) {
+          const ok = await connectCalendar();
+          if (!ok) {
+            btn.innerHTML =
+              '<i class="ti ti-address-book" style="font-size:14px"></i> Sync Contacts';
+            btn.disabled = false;
+            return;
+          }
+        }
+
+        try {
+          let allContacts = [];
+          let pageToken = null;
+
+          // Traer todos los contactos paginando (Google devuelve hasta 1000 por vez)
+          do {
+            const url = new URL(
+              "https://people.googleapis.com/v1/people/me/connections",
+            );
+            url.searchParams.set(
+              "personFields",
+              "names,phoneNumbers,emailAddresses",
+            );
+            url.searchParams.set("pageSize", "1000");
+            if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+            const res = await fetch(url.toString(), {
+              headers: { Authorization: "Bearer " + gcalToken },
+            });
+
+            if (res.status === 401) {
+              gcalToken = null;
+              showToast("Token expirado, reconectá Calendar/Contacts", "error");
+              break;
+            }
+
+            const data = await res.json();
+            allContacts = allContacts.concat(data.connections || []);
+            pageToken = data.nextPageToken || null;
+          } while (pageToken);
+
+          if (allContacts.length === 0) {
+            showToast(
+              "No se encontraron contactos en Google Contacts",
+              "warning",
+            );
+            return;
+          }
+
+          // Procesar y filtrar duplicados
+          let nuevos = 0,
+            duplicados = 0;
+          const toInsert = [];
+
+          for (const person of allContacts) {
+            const nombre = person.names?.[0]?.displayName || "";
+            const telefono = normalizePhone(
+              person.phoneNumbers?.[0]?.value || "",
+            );
+            const email = person.emailAddresses?.[0]?.value || "";
+
+            if (!nombre && !telefono) continue;
+
+            const dupTel =
+              telefono && clients.find((c) => c.telefono === telefono);
+            const dupNom =
+              nombre &&
+              clients.find(
+                (c) => c.nombre.toLowerCase() === nombre.toLowerCase(),
+              );
+
+            if (dupTel || dupNom) {
+              duplicados++;
+              continue;
+            }
+
+            toInsert.push({
+              nombre: nombre || "Sin nombre",
+              telefono: telefono || null,
+              email: email || null,
+            });
+            nuevos++;
+          }
+
+          if (toInsert.length === 0) {
+            showToast(
+              `Sin contactos nuevos (${duplicados} ya existían)`,
+              "warning",
+            );
+            return;
+          }
+
+          // Confirmar antes de insertar
+          showConfirm(
+            "Sincronizar Google Contacts",
+            `Se encontraron ${nuevos} contactos nuevos y ${duplicados} duplicados (se omiten). ¿Importar los ${nuevos} nuevos como "Importado"?`,
+            async () => {
+              showLoading(true);
+              const payload = toInsert.map((r) => ({
+                nombre: r.nombre,
+                telefono: r.telefono,
+                email: r.email,
+                tipo: "importado",
+                estado: "activo",
+                seguimientos: [],
+                notas_detalle: [],
+                reserva: {},
+              }));
+
+              const { data, error } = await db
+                .from("clientes")
+                .insert(payload)
+                .select();
+              showLoading(false);
+
+              if (error) {
+                showToast("Error al guardar: " + error.message, "error");
+                return;
+              }
+
+              const newClients = (data || []).map(dbToJs);
+              clients.unshift(...newClients);
+              renderTabs();
+              renderMain();
+              showToast(
+                `${newClients.length} contacto${newClients.length !== 1 ? "s" : ""} importado${newClients.length !== 1 ? "s" : ""}`,
+                "success",
+              );
+            },
+          );
+        } catch (e) {
+          showToast("Error inesperado: " + e.message, "error");
+        } finally {
+          btn.innerHTML =
+            '<i class="ti ti-address-book" style="font-size:14px"></i> Sync Contacts';
+          btn.disabled = false;
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
