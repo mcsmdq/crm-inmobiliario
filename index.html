@@ -40,6 +40,9 @@
         --no_contactar: #fee2e2;
         --no_contactar-text: #991b1b;
         --no_contactar-border: #fca5a5;
+        --familia: #ffedd5;
+        --familia-text: #9a3412;
+        --familia-border: #fdba74;
         --otro: #f3f4f6;
         --otro-text: #374151;
         --otro-border: #d1d5db;
@@ -407,6 +410,11 @@
         color: var(--no_contactar-text);
         border-color: var(--no_contactar-border);
       }
+      .badge-familia {
+        background: var(--familia);
+        color: var(--familia-text);
+        border-color: var(--familia-border);
+      }
       .badge-otro {
         background: var(--otro);
         color: var(--otro-text);
@@ -433,6 +441,9 @@
       }
       .row-colored-no_contactar td:first-child {
         border-left: 3px solid var(--no_contactar-border);
+      }
+      .row-colored-familia td:first-child {
+        border-left: 3px solid var(--familia-border);
       }
       .row-colored-otro td:first-child {
         border-left: 3px solid var(--otro-border);
@@ -1250,6 +1261,7 @@
                 <option value="inversor">Inversor</option>
                 <option value="importado">Importado</option>
                 <option value="no_contactar">No contactar</option>
+                <option value="familia">Familia</option>
                 <option value="otro">Otro</option>
               </select>
             </div>
@@ -2643,6 +2655,7 @@
           inversor: "#EDE9FE",
           importado: "#E0F2FE",
           no_contactar: "#FEE2E2",
+          familia: "#FFEDD5",
           otro: "#F3F4F6",
         };
         const textMap = {
@@ -2653,6 +2666,7 @@
           inversor: "#5B21B6",
           importado: "#0369A1",
           no_contactar: "#991B1B",
+          familia: "#9A3412",
           otro: "#374151",
         };
         const bgColor = colorMap[c.tipo] || "#F3F4F6";
@@ -2705,7 +2719,7 @@
       <div class="info-field"><label>Email</label><input type="email" value="${escHtml(c.email)}" onchange="updateField(${c.id},'email',this.value)"></div>
       <div class="info-field"><label>Tipo</label>
         <select onchange="updateFieldAndRefresh(${c.id},'tipo',this.value)">
-          ${["comprador", "vendedor", "locador", "locatario", "inversor", "importado", "no_contactar", "otro"].map((t) => `<option value="${t}" ${c.tipo === t ? "selected" : ""}>${TIPO_LABELS[t] || t}</option>`).join("")}
+          ${["comprador", "vendedor", "locador", "locatario", "inversor", "importado", "no_contactar", "familia", "otro"].map((t) => `<option value="${t}" ${c.tipo === t ? "selected" : ""}>${TIPO_LABELS[t] || t}</option>`).join("")}
         </select>
       </div>
       <div class="info-field"><label>Estado</label>
