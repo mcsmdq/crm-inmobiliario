@@ -1757,6 +1757,7 @@
       let pendingImport = [];
       let selectedIds = new Set();
       let activeSearch = null;
+      let lastCheckedId = null; // para shift+click
       let currentPage = 0; // 0-based page index
       const PAGE_SIZE = 100;
 
@@ -2126,16 +2127,98 @@
       // BULK SELECTION
       // ═══════════════════════════════════════════════════════════
       function toggleSelectAll(cb) {
-        const list = getFilteredClients();
-        if (cb.checked) list.forEach((c) => selectedIds.add(c.id));
-        else selectedIds.clear();
+        // Usa los clientes visibles actualmente (búsqueda filtrada o página normal)
+        const visibleIds = getVisibleIds();
+        if (cb.checked) visibleIds.forEach((id) => selectedIds.add(id));
+        else visibleIds.forEach((id) => selectedIds.delete(id));
         renderMain();
       }
 
-      function toggleSelectOne(id, cb) {
-        if (cb.checked) selectedIds.add(id);
-        else selectedIds.delete(id);
+      function getVisibleIds() {
+        // Si hay búsqueda activa, usa esos matches
+        if (activeSearch) {
+          return clients
+            .filter(
+              (c) =>
+                c.nombre.toLowerCase().includes(activeSearch) ||
+                (c.telefono && c.telefono.includes(activeSearch)) ||
+                (c.email && c.email.toLowerCase().includes(activeSearch)) ||
+                (c.zona && c.zona.toLowerCase().includes(activeSearch)) ||
+                (c.notas && c.notas.toLowerCase().includes(activeSearch)) ||
+                (c.presupuesto &&
+                  c.presupuesto.toLowerCase().includes(activeSearch)) ||
+                (c.referidorNombre &&
+                  c.referidorNombre.toLowerCase().includes(activeSearch)) ||
+                (c.reserva &&
+                  Object.values(c.reserva).some(
+                    (v) =>
+                      typeof v === "string" &&
+                      v.toLowerCase().includes(activeSearch),
+                  )),
+            )
+            .map((c) => c.id);
+        }
+        // Si no, usa la página actual
+        const full = getFilteredClients();
+        return full
+          .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+          .map((c) => c.id);
+      }
+
+      function toggleSelectOne(id, cb, event) {
+        const visibleIds = getVisibleIds();
+
+        if (
+          event &&
+          event.shiftKey &&
+          lastCheckedId !== null &&
+          lastCheckedId !== id
+        ) {
+          // SHIFT+click: seleccionar rango
+          const idxA = visibleIds.indexOf(lastCheckedId);
+          const idxB = visibleIds.indexOf(id);
+          if (idxA !== -1 && idxB !== -1) {
+            const from = Math.min(idxA, idxB);
+            const to = Math.max(idxA, idxB);
+            const rangeIds = visibleIds.slice(from, to + 1);
+            // Si el checkbox destino está marcado, marcamos todo el rango; si no, desmarcamos
+            if (cb.checked) rangeIds.forEach((rid) => selectedIds.add(rid));
+            else rangeIds.forEach((rid) => selectedIds.delete(rid));
+          }
+        } else if ((event && event.ctrlKey) || (event && event.metaKey)) {
+          // CTRL+click: toggle individual sin tocar los demás
+          if (cb.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+        } else {
+          // Click normal
+          if (cb.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+        }
+
+        lastCheckedId = id;
         updateBulkBar();
+
+        // Re-render solo los checkboxes sin re-renderizar toda la tabla (performance)
+        document.querySelectorAll("input[data-sel-id]").forEach((input) => {
+          const rid = parseInt(input.dataset.selId);
+          input.checked = selectedIds.has(rid);
+        });
+
+        // Actualizar el highlight de filas seleccionadas
+        document.querySelectorAll("tr[data-row-id]").forEach((row) => {
+          const rid = parseInt(row.dataset.rowId);
+          row.style.background = selectedIds.has(rid) ? "var(--surface)" : "";
+        });
+
+        // Actualizar checkbox "seleccionar todos"
+        const allCb = document.querySelector('thead input[type="checkbox"]');
+        if (allCb) {
+          const vis = getVisibleIds();
+          allCb.checked =
+            vis.length > 0 && vis.every((vid) => selectedIds.has(vid));
+          allCb.indeterminate =
+            !allCb.checked && vis.some((vid) => selectedIds.has(vid));
+        }
       }
 
       function updateBulkBar() {
@@ -2297,9 +2380,9 @@
           ${frecLabel ? `<span style="font-size:10px;color:var(--text3)">${frecLabel}</span>` : ""}
         </div>`;
               }
-              return `<tr class="row-colored-${c.tipo}" style="${noC ? "opacity:0.7" : ""}${isSelected ? "background:var(--surface)!important" : ""}">
+              return `<tr class="row-colored-${c.tipo}" data-row-id="${c.id}" style="${noC ? "opacity:0.7" : ""}${isSelected ? "background:var(--surface)!important" : ""}">
         <td onclick="event.stopPropagation()">
-          <input type="checkbox" ${isSelected ? "checked" : ""} onchange="toggleSelectOne(${c.id},this)" style="cursor:pointer;width:15px;height:15px">
+          <input type="checkbox" data-sel-id="${c.id}" ${isSelected ? "checked" : ""} onchange="toggleSelectOne(${c.id},this)" style="cursor:pointer;width:15px;height:15px">
         </td>
         <td onclick="openDetail(${c.id})" style="cursor:pointer"><strong>${escHtml(c.nombre)}</strong>${c.origen ? `<br><small style="color:var(--text3)">${origenLabel(c.origen)}</small>` : ""}</td>
         ${isAll ? `<td onclick="openDetail(${c.id})" style="cursor:pointer"><span class="badge badge-${c.tipo}">${TIPO_LABELS[c.tipo] || c.tipo}</span></td>` : ""}
@@ -2401,9 +2484,9 @@
                   : "#D1FAE5";
               proxHtml = `<span style="background:${bg};color:${color};padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600">${formatDate(c.proximoContacto)}</span>`;
             }
-            return `<tr class="row-colored-${c.tipo}" style="${noC ? "opacity:0.7" : ""}${isSelected ? "background:var(--surface)!important" : ""}">
+            return `<tr class="row-colored-${c.tipo}" data-row-id="${c.id}" style="${noC ? "opacity:0.7" : ""}${isSelected ? "background:var(--surface)!important" : ""}">
       <td onclick="event.stopPropagation()">
-        <input type="checkbox" ${isSelected ? "checked" : ""} onchange="toggleSelectOne(${c.id},this)" style="cursor:pointer;width:15px;height:15px">
+        <input type="checkbox" data-sel-id="${c.id}" ${isSelected ? "checked" : ""} onchange="toggleSelectOne(${c.id},this)" style="cursor:pointer;width:15px;height:15px">
       </td>
       <td onclick="openDetail(${c.id})" style="cursor:pointer"><strong>${hlText(c.nombre, q)}</strong></td>
       <td onclick="openDetail(${c.id})" style="cursor:pointer"><span class="badge badge-${c.tipo}">${TIPO_LABELS[c.tipo] || c.tipo}</span></td>
