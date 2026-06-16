@@ -1085,7 +1085,11 @@
           <div class="login-tab active" onclick="switchAuthTab('login')">
             Iniciar sesión
           </div>
-          <div class="login-tab" onclick="switchAuthTab('register')">
+          <div
+            class="login-tab"
+            style="opacity: 0.3; cursor: not-allowed"
+            title="Registro deshabilitado"
+          >
             Registrarse
           </div>
         </div>
@@ -1517,6 +1521,7 @@
       let authTab = "login";
 
       function switchAuthTab(t) {
+        if (t === "register") return; // registro deshabilitado
         authTab = t;
         document
           .querySelectorAll(".login-tab")
@@ -1534,33 +1539,138 @@
         document.getElementById("registerError").textContent = "";
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // SEGURIDAD
+      // ═══════════════════════════════════════════════════════════
+
+      // Rate limiting login — máx 5 intentos en 15 minutos
+      const loginAttempts = { count: 0, firstAttempt: null, blocked: false };
+
+      function checkRateLimit() {
+        const now = Date.now();
+        const WINDOW = 15 * 60 * 1000; // 15 minutos
+        const MAX = 5;
+
+        if (loginAttempts.blocked) {
+          const remaining = Math.ceil(
+            (loginAttempts.firstAttempt + WINDOW - now) / 60000,
+          );
+          if (now < loginAttempts.firstAttempt + WINDOW) {
+            showLoginError(
+              `Demasiados intentos. Esperá ${remaining} minuto${remaining !== 1 ? "s" : ""}.`,
+            );
+            return false;
+          }
+          // Ventana expiró, resetear
+          loginAttempts.count = 0;
+          loginAttempts.firstAttempt = null;
+          loginAttempts.blocked = false;
+        }
+
+        if (!loginAttempts.firstAttempt) loginAttempts.firstAttempt = now;
+        loginAttempts.count++;
+
+        if (loginAttempts.count >= MAX) {
+          loginAttempts.blocked = true;
+          showLoginError("Demasiados intentos fallidos. Esperá 15 minutos.");
+          return false;
+        }
+
+        return true;
+      }
+
+      function resetRateLimit() {
+        loginAttempts.count = 0;
+        loginAttempts.firstAttempt = null;
+        loginAttempts.blocked = false;
+      }
+
+      function showLoginError(msg) {
+        document.getElementById("loginError").textContent = msg;
+      }
+
+      // Sanitización — elimina caracteres peligrosos de cualquier input
+      function sanitize(str) {
+        if (typeof str !== "string") return "";
+        return str
+          .replace(/[<>]/g, "") // XSS básico
+          .replace(/['";\\]/g, "") // SQL injection chars
+          .replace(/--/g, "") // SQL comments
+          .replace(/\/\*/g, "") // SQL block comments
+          .replace(/xp_/gi, "") // SQL Server procs
+          .replace(/javascript:/gi, "") // JS injection en URLs
+          .replace(/on\w+\s*=/gi, "") // event handlers inline
+          .trim()
+          .slice(0, 500); // límite de longitud
+      }
+
+      // Sanitiza todos los campos de un objeto cliente antes de enviarlo a Supabase
+      function sanitizeClient(obj) {
+        const safe = {};
+        for (const [key, val] of Object.entries(obj)) {
+          if (typeof val === "string") safe[key] = sanitize(val);
+          else if (Array.isArray(val))
+            safe[key] = val; // jsonb, no tocar
+          else if (val && typeof val === "object")
+            safe[key] = val; // jsonb, no tocar
+          else safe[key] = val;
+        }
+        return safe;
+      }
+
+      // Content Security Policy dinámica (headers vía meta tag)
+      (function applyCSP() {
+        const meta = document.createElement("meta");
+        meta.httpEquiv = "Content-Security-Policy";
+        meta.content = [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://accounts.google.com https://cdn.supabase.io https://cdn.jsdelivr.net",
+          "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+          "connect-src 'self' https://*.supabase.co https://people.googleapis.com https://www.googleapis.com https://accounts.google.com",
+          "frame-src https://accounts.google.com",
+          "img-src 'self' data: https:",
+          "font-src 'self' https://cdn.jsdelivr.net",
+        ].join("; ");
+        document.head.appendChild(meta);
+      })();
+
       async function doLogin() {
-        const email = document
-          .getElementById("l_email")
-          .value.trim()
-          .toLowerCase();
-        const pass = document.getElementById("l_pass").value;
+        if (!checkRateLimit()) return;
+
+        const email = sanitize(
+          document.getElementById("l_email").value.trim().toLowerCase(),
+        );
+        const pass = document.getElementById("l_pass").value; // contraseña no se sanitiza, Supabase la maneja
         const errEl = document.getElementById("loginError");
+
         if (!email || !pass) {
           errEl.textContent = "Completá todos los campos";
           return;
         }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errEl.textContent = "Email inválido";
+          return;
+        }
+
         errEl.textContent = "Iniciando sesión...";
+
         const { data, error } = await db.auth.signInWithPassword({
           email,
           password: pass,
         });
+
         if (error) {
           errEl.textContent =
             error.message === "Invalid login credentials"
               ? "Email o contraseña incorrectos"
-              : error.message;
+              : "Error al iniciar sesión";
           return;
         }
+
+        resetRateLimit();
         currentUser = data.user;
         startApp();
       }
-
       async function doRegister() {
         const name = document.getElementById("r_name").value.trim();
         const email = document
@@ -2496,10 +2606,11 @@
             referidor_tel: referidorTel || null,
             frecuencia_dias: frecuenciaDias ? parseInt(frecuenciaDias) : null,
             proximo_contacto: proximoContacto || null,
+            user_id: currentUser.id,
           };
           const { error } = await db
             .from("clientes")
-            .update(payload)
+            .update(sanitizeClient(payload))
             .eq("id", editingId);
           if (error) {
             showToast("Error: " + error.message, "error");
@@ -2556,7 +2667,7 @@
           };
           const { data, error } = await db
             .from("clientes")
-            .insert([payload])
+            .insert([sanitizeClient(payload)])
             .select()
             .single();
           if (error) {
