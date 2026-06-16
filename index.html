@@ -1756,6 +1756,7 @@
         localStorage.getItem("crm_cal_connected") === "true";
       let pendingImport = [];
       let selectedIds = new Set();
+      let activeSearch = null;
       let currentPage = 0; // 0-based page index
       const PAGE_SIZE = 100;
 
@@ -2357,6 +2358,104 @@
       <div style="overflow-x:auto"><table><thead><tr>${colsHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></div>
       ${pagHtml}
     </div>`;
+      }
+
+      function renderMainFiltered(matches, q) {
+        const isAll = true;
+        const allChecked =
+          matches.length > 0 && matches.every((c) => selectedIds.has(c.id));
+        const today = new Date().toISOString().slice(0, 10);
+        const colCount = 11;
+
+        const colsHtml = `
+    <th style="width:36px"><input type="checkbox" ${allChecked ? "checked" : ""} onchange="toggleSelectAll(this)" style="cursor:pointer;width:15px;height:15px"></th>
+    <th>Nombre</th><th>Tipo</th><th>Teléfono</th><th>Email</th>
+    <th>Zona</th><th>Presupuesto</th><th>Estado</th>
+    <th>Próx. contacto</th><th>Seguimiento</th><th>Acciones</th>`;
+
+        const rowsHtml = matches
+          .map((c) => {
+            const segs = c.seguimientos || [];
+            const lastSeg = segs.length ? segs[segs.length - 1] : null;
+            const segDate = lastSeg ? lastSeg.fecha : c.seguimiento || "";
+            const synced = lastSeg?.synced || false;
+            const statusLabel =
+              { activo: "Activo", espera: "En espera", cerrado: "Cerrado" }[
+                c.estado
+              ] || "Activo";
+            const noC = c.tipo === "no_contactar";
+            const isSelected = selectedIds.has(c.id);
+            let proxHtml = "—";
+            if (c.proximoContacto) {
+              const isOverdue = c.proximoContacto < today;
+              const isToday = c.proximoContacto === today;
+              const color = isOverdue
+                ? "#DC2626"
+                : isToday
+                  ? "#D97706"
+                  : "#059669";
+              const bg = isOverdue
+                ? "#FEE2E2"
+                : isToday
+                  ? "#FEF3C7"
+                  : "#D1FAE5";
+              proxHtml = `<span style="background:${bg};color:${color};padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600">${formatDate(c.proximoContacto)}</span>`;
+            }
+            return `<tr class="row-colored-${c.tipo}" style="${noC ? "opacity:0.7" : ""}${isSelected ? "background:var(--surface)!important" : ""}">
+      <td onclick="event.stopPropagation()">
+        <input type="checkbox" ${isSelected ? "checked" : ""} onchange="toggleSelectOne(${c.id},this)" style="cursor:pointer;width:15px;height:15px">
+      </td>
+      <td onclick="openDetail(${c.id})" style="cursor:pointer"><strong>${hlText(c.nombre, q)}</strong></td>
+      <td onclick="openDetail(${c.id})" style="cursor:pointer"><span class="badge badge-${c.tipo}">${TIPO_LABELS[c.tipo] || c.tipo}</span></td>
+      <td onclick="openDetail(${c.id})" style="cursor:pointer">${c.telefono || "—"}</td>
+      <td onclick="openDetail(${c.id})" style="cursor:pointer;color:var(--text2)">${c.email || "—"}</td>
+      <td onclick="openDetail(${c.id})" style="cursor:pointer">${c.zona || "—"}</td>
+      <td onclick="openDetail(${c.id})" style="cursor:pointer">${c.presupuesto || "—"}</td>
+      <td onclick="openDetail(${c.id})" style="cursor:pointer"><span class="status-badge status-${c.estado || "activo"}">${statusLabel}</span></td>
+      <td onclick="event.stopPropagation()">${proxHtml}</td>
+      <td onclick="event.stopPropagation()">
+        ${
+          noC
+            ? `<span style="font-size:12px;color:#DC2626"><i class="ti ti-ban"></i> No contactar</span>`
+            : `<div class="seguimiento-date">
+                  <input type="date" value="${segDate}" onchange="quickSeguimiento(${c.id},this.value)">
+                  ${
+                    segDate
+                      ? `<button class="cal-sync-btn ${synced ? "synced" : "pending"}" onclick="event.stopPropagation();syncCal(${c.id})">
+                    <i class="ti ti-calendar-${synced ? "check" : "plus"}"></i></button>`
+                      : ""
+                  }
+                </div>`
+        }
+      </td>
+      <td onclick="event.stopPropagation()">
+        <div class="actions">
+          <button class="btn-icon" onclick="openDetail(${c.id})" title="Ver"><i class="ti ti-eye"></i></button>
+          <button class="btn-icon" onclick="openEditModal(${c.id})" title="Editar"><i class="ti ti-edit"></i></button>
+          <button class="btn-icon danger" onclick="deleteClient(${c.id})" title="Eliminar"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+          })
+          .join("");
+
+        document.getElementById("mainContent").innerHTML = `
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;color:#1E40AF"><i class="ti ti-search"></i> <strong>${matches.length}</strong> resultado${matches.length !== 1 ? "s" : ""} para "<strong>${escHtml(q)}</strong>"</span>
+      <button class="btn" onclick="clearSearch()" style="font-size:12px;padding:4px 10px"><i class="ti ti-x"></i> Limpiar búsqueda</button>
+    </div>
+    <div class="table-wrap">
+      <div style="overflow-x:auto"><table><thead><tr>${colsHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></div>
+    </div>`;
+      }
+
+      function clearSearch() {
+        activeSearch = null;
+        currentTab = "todos";
+        currentPage = 0;
+        document.getElementById("globalSearch").value = "";
+        renderTabs();
+        renderMain();
       }
 
       function origenLabel(o) {
@@ -3485,6 +3584,61 @@
                 )
                 .join("");
         sr.classList.add("open");
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.target.id !== "globalSearch") return;
+        if (e.key !== "Enter") return;
+
+        const q = e.target.value.trim().toLowerCase();
+        if (q.length < 2) return;
+
+        // Cerrar dropdown
+        const sr = document.getElementById("searchResults");
+        if (sr) sr.classList.remove("open");
+
+        // Filtrar clientes que coinciden
+        const matches = clients.filter(
+          (c) =>
+            c.nombre.toLowerCase().includes(q) ||
+            (c.telefono && c.telefono.includes(q)) ||
+            (c.email && c.email.toLowerCase().includes(q)) ||
+            (c.zona && c.zona.toLowerCase().includes(q)) ||
+            (c.notas && c.notas.toLowerCase().includes(q)) ||
+            (c.presupuesto && c.presupuesto.toLowerCase().includes(q)) ||
+            (c.referidorNombre &&
+              c.referidorNombre.toLowerCase().includes(q)) ||
+            (c.reserva &&
+              Object.values(c.reserva).some(
+                (v) => typeof v === "string" && v.toLowerCase().includes(q),
+              )),
+        );
+
+        if (matches.length === 0) {
+          showToast('No se encontraron resultados para "' + q + '"', "warning");
+          return;
+        }
+
+        if (matches.length === 1) {
+          // Si es uno solo, abre el detalle directamente
+          e.target.value = "";
+          const c = matches[0];
+          currentTab = c.tipo;
+          renderTabs();
+          renderMain();
+          openDetail(c.id);
+          return;
+        }
+
+        // Si son varios, muestra todos en la tabla con filtro activo
+        e.target.value = "";
+        currentTab = "todos";
+        currentPage = 0;
+        activeSearch = q; // variable para filtro activo
+        document.getElementById("detailView").style.display = "none";
+        document.getElementById("mainContent").style.display = "";
+        renderTabs();
+        renderMainFiltered(matches, q);
       });
 
       document.addEventListener("click", (e) => {
