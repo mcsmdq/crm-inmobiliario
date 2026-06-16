@@ -2846,6 +2846,7 @@
             reserva: {},
             frecuencia_dias: frecuenciaDias ? parseInt(frecuenciaDias) : null,
             proximo_contacto: proximoContacto || null,
+            user_id: currentUser.id,
           };
           const { data, error } = await db
             .from("clientes")
