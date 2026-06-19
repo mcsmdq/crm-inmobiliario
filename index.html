@@ -1057,15 +1057,15 @@
 
       /* WHATSAPP */
       .wa-btn {
-        color: #25D366;
+        color: #25d366;
         border-color: #86efac;
-        background: #DCFCE7;
+        background: #dcfce7;
       }
       .wa-btn:hover {
         background: #bbf7d0;
       }
       .wa-link {
-        color: #25D366;
+        color: #25d366;
         text-decoration: none;
         font-weight: 500;
         display: inline-flex;
@@ -1393,30 +1393,73 @@
     </div>
     <!-- ═══ WHATSAPP CHAT IMPORT MODAL ═══ -->
     <div class="overlay" id="waImportModal">
-      <div class="modal" style="max-width:640px">
+      <div class="modal" style="max-width: 640px">
         <div class="modal-header">
-          <i class="ti ti-brand-whatsapp" style="font-size:20px;color:#25D366"></i>
+          <i
+            class="ti ti-brand-whatsapp"
+            style="font-size: 20px; color: #25d366"
+          ></i>
           <h2>Importar chat de WhatsApp</h2>
-          <button class="modal-close" onclick="closeWaImportModal()"><i class="ti ti-x"></i></button>
+          <button class="modal-close" onclick="closeWaImportModal()">
+            <i class="ti ti-x"></i>
+          </button>
         </div>
         <div class="modal-body">
-          <div class="import-drop" id="waImportDrop" onclick="document.getElementById('waChatFileInput').click()">
+          <div
+            class="import-drop"
+            id="waImportDrop"
+            onclick="document.getElementById('waChatFileInput').click()"
+          >
             <i class="ti ti-message-chatbot"></i>
-            <p><strong>Hacé clic o arrastrá el archivo .txt del chat de WhatsApp</strong></p>
-            <p style="margin-top:4px;font-size:12px;color:var(--text3)">Exportá el chat desde WhatsApp → Más → Exportar chat → Sin medios</p>
-            <input type="file" id="waChatFileInput" accept=".txt" style="display:none" onchange="handleWaChatFile(this.files[0])" />
+            <p>
+              <strong
+                >Hacé clic o arrastrá el archivo .txt del chat de
+                WhatsApp</strong
+              >
+            </p>
+            <p style="margin-top: 4px; font-size: 12px; color: var(--text3)">
+              Exportá el chat desde WhatsApp → Más → Exportar chat → Sin medios
+            </p>
+            <input
+              type="file"
+              id="waChatFileInput"
+              accept=".txt"
+              style="display: none"
+              onchange="handleWaChatFile(this.files[0])"
+            />
           </div>
-          <div id="waImportPreview" style="display:none">
+          <div id="waImportPreview" style="display: none">
             <div class="import-stats" id="waImportStats"></div>
-            <div class="import-preview" id="waImportTable" style="margin-top:12px"></div>
+            <div
+              class="import-preview"
+              id="waImportTable"
+              style="margin-top: 12px"
+            ></div>
           </div>
-          <div style="margin-top:14px;padding:12px;background:#DCFCE7;border:1px solid #86efac;border-radius:var(--radius-sm);font-size:12px;color:#166534">
-            <strong>Qué hace:</strong> Analiza el chat, detecta temas de conversación (interés, visitas, precio, reserva), sugiere el tipo de cliente, y crea notas y seguimientos automáticamente.
+          <div
+            style="
+              margin-top: 14px;
+              padding: 12px;
+              background: #dcfce7;
+              border: 1px solid #86efac;
+              border-radius: var(--radius-sm);
+              font-size: 12px;
+              color: #166534;
+            "
+          >
+            <strong>Qué hace:</strong> Analiza el chat, detecta temas de
+            conversación (interés, visitas, precio, reserva), sugiere el tipo de
+            cliente, y crea notas y seguimientos automáticamente.
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn" onclick="closeWaImportModal()">Cancelar</button>
-          <button class="btn btn-primary" id="waDoImportBtn" onclick="doWaImport()" style="display:none">
+          <button
+            class="btn btn-primary"
+            id="waDoImportBtn"
+            onclick="doWaImport()"
+            style="display: none"
+          >
             <i class="ti ti-check"></i> Importar chat como seguimiento
           </button>
         </div>
@@ -1982,22 +2025,44 @@
         const direccion = c.reserva?.direccion || "";
         const today = new Date().toLocaleDateString("es-AR");
         const templates = [
-          { key: "seguimiento", label: "Seguimiento general", icon: "ti-message" },
-          { key: "visita", label: "Confirmar visita", icon: "ti-calendar-check" },
-          { key: "post_visita", label: "Después de visita", icon: "ti-home-check" },
-          { key: "reserva", label: "Coordinar reserva", icon: "ti-file-dollar" },
-          { key: "documentacion", label: "Pedir documentación", icon: "ti-file-text" },
+          {
+            key: "seguimiento",
+            label: "Seguimiento general",
+            icon: "ti-message",
+          },
+          {
+            key: "visita",
+            label: "Confirmar visita",
+            icon: "ti-calendar-check",
+          },
+          {
+            key: "post_visita",
+            label: "Después de visita",
+            icon: "ti-home-check",
+          },
+          {
+            key: "reserva",
+            label: "Coordinar reserva",
+            icon: "ti-file-dollar",
+          },
+          {
+            key: "documentacion",
+            label: "Pedir documentación",
+            icon: "ti-file-text",
+          },
         ];
-        const html = templates.map((t) => {
-          const msg = WA_TEMPLATES[t.key](c.nombre, direccion, today);
-          const link = waLink(phone, msg);
-          return `<a href="${link}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+        const html = templates
+          .map((t) => {
+            const msg = WA_TEMPLATES[t.key](c.nombre, direccion, today);
+            const link = waLink(phone, msg);
+            return `<a href="${link}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
             <div style="padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:background .12s;margin-bottom:8px;background:var(--surface)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='var(--surface)'">
               <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:4px"><i class="ti ${t.icon}" style="color:#25D366"></i> ${t.label}</div>
               <div style="font-size:11px;color:var(--text3);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(msg.slice(0, 80))}...</div>
             </div>
           </a>`;
-        }).join("");
+          })
+          .join("");
         // Custom message option
         const customHtml = `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
           <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">Mensaje personalizado</label>
@@ -2008,16 +2073,24 @@
         // Override the confirm buttons since we're using this as a picker
         document.getElementById("confirmOk").style.display = "none";
         document.getElementById("confirmCancel").textContent = "Cerrar";
-        document.getElementById("confirmDialog").querySelector(".confirm-box").style.maxWidth = "420px";
+        document
+          .getElementById("confirmDialog")
+          .querySelector(".confirm-box").style.maxWidth = "420px";
       }
 
       function sendCustomWa(clientId) {
         const c = clients.find((x) => x.id === clientId);
         if (!c) return;
         const msg = document.getElementById("waCustomMsg").value.trim();
-        if (!msg) { showToast("Escribí un mensaje", "error"); return; }
+        if (!msg) {
+          showToast("Escribí un mensaje", "error");
+          return;
+        }
         const link = waLink(c.telefono, msg);
-        if (!link) { showToast("Teléfono no válido", "error"); return; }
+        if (!link) {
+          showToast("Teléfono no válido", "error");
+          return;
+        }
         window.open(link, "_blank", "noopener");
         document.getElementById("confirmDialog").classList.remove("open");
         document.getElementById("confirmOk").style.display = "";
@@ -2045,7 +2118,12 @@
             const m = line.match(pat);
             if (m) {
               if (currentMsg) messages.push(currentMsg);
-              currentMsg = { date: m[1], time: m[2], author: m[3].trim(), text: m[4].trim() };
+              currentMsg = {
+                date: m[1],
+                time: m[2],
+                author: m[3].trim(),
+                text: m[4].trim(),
+              };
               matched = true;
               break;
             }
@@ -2061,12 +2139,58 @@
 
       function analyzeWaChat(messages) {
         const keywords = {
-          interesado: ["interesado", "me gusta", "me interesa", "quiero", "lo quiero", "me convence", "lo veo bien"],
-          no_interesado: ["no me gusta", "no me interesa", "no quiero", "no me convence", "descartado", "no era lo que buscaba"],
-          visita: ["visita", "ver la propiedad", "podemos ver", "cuando vemos", "agendar visita", "pasar a ver"],
-          precio: ["precio", "cuanto", "cuánto", "valor", "barato", "caro", "negociar", "oferta", "ofrezco"],
-          documentacion: ["documentacion", "documentación", "papeles", "contrato", "escribano", "garante"],
-          reserva: ["reserva", "seña", "adelanto", "reservar", "boleto", "escritura"],
+          interesado: [
+            "interesado",
+            "me gusta",
+            "me interesa",
+            "quiero",
+            "lo quiero",
+            "me convence",
+            "lo veo bien",
+          ],
+          no_interesado: [
+            "no me gusta",
+            "no me interesa",
+            "no quiero",
+            "no me convence",
+            "descartado",
+            "no era lo que buscaba",
+          ],
+          visita: [
+            "visita",
+            "ver la propiedad",
+            "podemos ver",
+            "cuando vemos",
+            "agendar visita",
+            "pasar a ver",
+          ],
+          precio: [
+            "precio",
+            "cuanto",
+            "cuánto",
+            "valor",
+            "barato",
+            "caro",
+            "negociar",
+            "oferta",
+            "ofrezco",
+          ],
+          documentacion: [
+            "documentacion",
+            "documentación",
+            "papeles",
+            "contrato",
+            "escribano",
+            "garante",
+          ],
+          reserva: [
+            "reserva",
+            "seña",
+            "adelanto",
+            "reservar",
+            "boleto",
+            "escritura",
+          ],
         };
         const analysis = { topics: {}, suggestedType: null, summary: [] };
         for (const msg of messages) {
@@ -2078,16 +2202,26 @@
           }
         }
         // Determine suggested client type
-        if (analysis.topics.interesado || analysis.topics.visita) analysis.suggestedType = "comprador";
-        else if (analysis.topics.precio && (analysis.topics.reserva || analysis.topics.documentacion)) analysis.suggestedType = "comprador";
+        if (analysis.topics.interesado || analysis.topics.visita)
+          analysis.suggestedType = "comprador";
+        else if (
+          analysis.topics.precio &&
+          (analysis.topics.reserva || analysis.topics.documentacion)
+        )
+          analysis.suggestedType = "comprador";
         // Generate summary notes
         const noteTexts = [];
-        if (analysis.topics.interesado) noteTexts.push("Cliente mostró interés en la propiedad");
-        if (analysis.topics.no_interesado) noteTexts.push("Cliente no mostró interés");
-        if (analysis.topics.visita) noteTexts.push(`Mencionó visita ${analysis.topics.visita} vez/veces`);
-        if (analysis.topics.precio) noteTexts.push(`Discutió precio ${analysis.topics.precio} vez/veces`);
+        if (analysis.topics.interesado)
+          noteTexts.push("Cliente mostró interés en la propiedad");
+        if (analysis.topics.no_interesado)
+          noteTexts.push("Cliente no mostró interés");
+        if (analysis.topics.visita)
+          noteTexts.push(`Mencionó visita ${analysis.topics.visita} vez/veces`);
+        if (analysis.topics.precio)
+          noteTexts.push(`Discutió precio ${analysis.topics.precio} vez/veces`);
         if (analysis.topics.reserva) noteTexts.push("Mencionó reserva/seña");
-        if (analysis.topics.documentacion) noteTexts.push("Habló de documentación/contrato");
+        if (analysis.topics.documentacion)
+          noteTexts.push("Habló de documentación/contrato");
         analysis.summary = noteTexts;
         return analysis;
       }
@@ -2119,7 +2253,11 @@
             callback: (response) => {
               if (response.error) {
                 // If silent auth fails, fall back to consent
-                if (response.error === "insufficient_privileges" || response.error === "access_denied" || response.error === "interaction_required") {
+                if (
+                  response.error === "insufficient_privileges" ||
+                  response.error === "access_denied" ||
+                  response.error === "interaction_required"
+                ) {
                   gcalToken = null;
                   localStorage.removeItem("crm_gcal_token");
                   const client2 = google.accounts.oauth2.initTokenClient({
@@ -2128,14 +2266,20 @@
                     prompt: "consent",
                     callback: (response2) => {
                       if (response2.error) {
-                        showToast("Error al conectar Calendar: " + response2.error, "error");
+                        showToast(
+                          "Error al conectar Calendar: " + response2.error,
+                          "error",
+                        );
                         resolve(false);
                         return;
                       }
                       gcalToken = response2.access_token;
                       calendarConnected = true;
                       localStorage.setItem("crm_cal_connected", "true");
-                      localStorage.setItem("crm_gcal_token", response2.access_token);
+                      localStorage.setItem(
+                        "crm_gcal_token",
+                        response2.access_token,
+                      );
                       showToast("Google Calendar conectado ✓", "success");
                       renderMain();
                       resolve(true);
@@ -2144,7 +2288,10 @@
                   client2.requestAccessToken();
                   return;
                 }
-                showToast("Error al conectar Calendar: " + response.error, "error");
+                showToast(
+                  "Error al conectar Calendar: " + response.error,
+                  "error",
+                );
                 resolve(false);
                 return;
               }
@@ -3470,11 +3617,15 @@
         <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Exportá el chat desde WhatsApp (Más → Exportar chat → Sin medios) y subí el .txt para analizarlo automáticamente.</p>
         <button class="btn btn-primary" onclick="openWaImportModal(${c.id})"><i class="ti ti-upload"></i> Importar chat .txt</button>
       </div>
-      ${waUrl ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px">
+      ${
+        waUrl
+          ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px">
         <h3 style="font-size:14px;margin-bottom:8px">Enviar mensaje personalizado</h3>
         <textarea id="waCustomDetailMsg" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;resize:vertical;min-height:70px" placeholder="Escribí tu mensaje...">Hola ${c.nombre.split(" ")[0]}, </textarea>
-        <a href="#" class="btn btn-primary" style="margin-top:8px" onclick="const msg=document.getElementById('waCustomDetailMsg').value.trim();if(!msg){showToast('Escribí un mensaje','error');return false;}this.href='${waUrl.split('?')[0]}?text='+encodeURIComponent(msg);" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> Enviar</a>
-      </div>` : `<p style="color:var(--text3);font-size:13px">Agregá un teléfono para usar las funciones de WhatsApp.</p>`}
+        <a href="#" class="btn btn-primary" style="margin-top:8px" onclick="const msg=document.getElementById('waCustomDetailMsg').value.trim();if(!msg){showToast('Escribí un mensaje','error');return false;}this.href='${waUrl.split("?")[0]}?text='+encodeURIComponent(msg);" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> Enviar</a>
+      </div>`
+          : `<p style="color:var(--text3);font-size:13px">Agregá un teléfono para usar las funciones de WhatsApp.</p>`
+      }
     </div>`;
         }
 
@@ -3693,7 +3844,10 @@
 
       function shareClientWa(clientId) {
         const c = clients.find((x) => x.id === clientId);
-        if (!c || !c.telefono) { showToast("Cliente sin teléfono", "error"); return; }
+        if (!c || !c.telefono) {
+          showToast("Cliente sin teléfono", "error");
+          return;
+        }
         const ficha = `*${c.nombre}*\n📞 ${c.telefono}${c.email ? "\n📧 " + c.email : ""}${c.zona ? "\n📍 Zona: " + c.zona : ""}${c.presupuesto ? "\n💰 " + c.presupuesto : ""}${c.tipo ? "\n🏷️ Tipo: " + (TIPO_LABELS[c.tipo] || c.tipo) : ""}${c.estado ? "\n📊 Estado: " + c.estado : ""}`;
         const link = waLink(c.telefono, ficha);
         window.open(link, "_blank", "noopener");
@@ -3702,10 +3856,18 @@
       // ═══════════════════════════════════════════════════════════
       // WHATSAPP CHAT IMPORT UI
       // ═══════════════════════════════════════════════════════════
-      let pendingWaImport = { messages: [], analysis: null, targetClientId: null };
+      let pendingWaImport = {
+        messages: [],
+        analysis: null,
+        targetClientId: null,
+      };
 
       function openWaImportModal(clientId) {
-        pendingWaImport = { messages: [], analysis: null, targetClientId: clientId };
+        pendingWaImport = {
+          messages: [],
+          analysis: null,
+          targetClientId: clientId,
+        };
         document.getElementById("waImportModal").classList.add("open");
         document.getElementById("waImportPreview").style.display = "none";
         document.getElementById("waImportStats").innerHTML = "";
@@ -3715,7 +3877,11 @@
 
       function closeWaImportModal() {
         document.getElementById("waImportModal").classList.remove("open");
-        pendingWaImport = { messages: [], analysis: null, targetClientId: null };
+        pendingWaImport = {
+          messages: [],
+          analysis: null,
+          targetClientId: null,
+        };
       }
 
       function handleWaChatFile(file) {
@@ -3724,7 +3890,10 @@
         reader.onload = (e) => {
           const messages = parseWhatsAppChat(e.target.result);
           if (messages.length === 0) {
-            showToast("No se encontraron mensajes válidos. Asegurate de exportar el chat como .txt desde WhatsApp.", "error");
+            showToast(
+              "No se encontraron mensajes válidos. Asegurate de exportar el chat como .txt desde WhatsApp.",
+              "error",
+            );
             return;
           }
           const analysis = analyzeWaChat(messages);
@@ -3733,14 +3902,27 @@
           // Show preview
           document.getElementById("waImportStats").innerHTML = `
             <strong>${messages.length}</strong> mensajes analizados
-            ${Object.keys(analysis.topics).length > 0 ? `<br><br><strong style="color:#4A90D9">Temas detectados:</strong><br>` + Object.entries(analysis.topics).map(([k, v]) => `• ${k}: ${v} menciones`).join("<br>") : ""}
+            ${
+              Object.keys(analysis.topics).length > 0
+                ? `<br><br><strong style="color:#4A90D9">Temas detectados:</strong><br>` +
+                  Object.entries(analysis.topics)
+                    .map(([k, v]) => `• ${k}: ${v} menciones`)
+                    .join("<br>")
+                : ""
+            }
             ${analysis.summary.length > 0 ? `<br><br><strong style="color:#059669">Resumen sugerido:</strong><br>• ${analysis.summary.join("<br>• ")}` : ""}
             ${analysis.suggestedType ? `<br><br><strong style="color:#92400E">Tipo sugerido:</strong> ${TIPO_LABELS[analysis.suggestedType] || analysis.suggestedType}` : ""}
           `;
           // Show last 20 messages
           document.getElementById("waImportTable").innerHTML = `
             <table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:5px;background:var(--surface)">Fecha</th><th style="text-align:left;padding:5px;background:var(--surface)">Autor</th><th style="text-align:left;padding:5px;background:var(--surface)">Mensaje</th></tr></thead>
-            <tbody>${messages.slice(-20).map(m => `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px;white-space:nowrap;color:var(--text3)">${escHtml(m.date)} ${escHtml(m.time)}</td><td style="padding:5px;font-weight:600;white-space:nowrap">${escHtml(m.author.slice(0, 20))}</td><td style="padding:5px">${escHtml(m.text.slice(0, 120))}${m.text.length > 120 ? "..." : ""}</td></tr>`).join("")}</tbody></table>
+            <tbody>${messages
+              .slice(-20)
+              .map(
+                (m) =>
+                  `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px;white-space:nowrap;color:var(--text3)">${escHtml(m.date)} ${escHtml(m.time)}</td><td style="padding:5px;font-weight:600;white-space:nowrap">${escHtml(m.author.slice(0, 20))}</td><td style="padding:5px">${escHtml(m.text.slice(0, 120))}${m.text.length > 120 ? "..." : ""}</td></tr>`,
+              )
+              .join("")}</tbody></table>
             ${messages.length > 20 ? `<p style="text-align:center;color:var(--text3);font-size:11px;margin-top:8px">...y ${messages.length - 20} mensajes más</p>` : ""}
           `;
           document.getElementById("waImportPreview").style.display = "";
@@ -3750,22 +3932,37 @@
       }
 
       async function doWaImport() {
-        if (!pendingWaImport.messages.length || !pendingWaImport.targetClientId) return;
+        if (!pendingWaImport.messages.length || !pendingWaImport.targetClientId)
+          return;
         const c = clients.find((x) => x.id === pendingWaImport.targetClientId);
         if (!c) return;
         showLoading(true);
         const msgs = pendingWaImport.messages;
         const analysis = pendingWaImport.analysis;
         // Build summary note
-        const noteLines = [`Importado desde WhatsApp — ${msgs.length} mensajes`];
-        if (analysis.summary.length) noteLines.push("", "Análisis:", ...analysis.summary.map((s) => "• " + s));
+        const noteLines = [
+          `Importado desde WhatsApp — ${msgs.length} mensajes`,
+        ];
+        if (analysis.summary.length)
+          noteLines.push(
+            "",
+            "Análisis:",
+            ...analysis.summary.map((s) => "• " + s),
+          );
         // Add conversation excerpt as a note
-        const excerpt = msgs.slice(-10).map((m) => `[${m.date} ${m.time}] ${m.author}: ${m.text}`).join("\n");
+        const excerpt = msgs
+          .slice(-10)
+          .map((m) => `[${m.date} ${m.time}] ${m.author}: ${m.text}`)
+          .join("\n");
         noteLines.push("", "Últimos mensajes:", excerpt);
         const fullNote = noteLines.join("\n");
         // Create nota
         if (!c.notasDetalle) c.notasDetalle = [];
-        c.notasDetalle.push({ id: genId(), texto: fullNote, fecha: new Date().toISOString() });
+        c.notasDetalle.push({
+          id: genId(),
+          texto: fullNote,
+          fecha: new Date().toISOString(),
+        });
         // Create seguimiento entries from dated messages
         const msgsByDate = {};
         for (const m of msgs) {
@@ -3779,25 +3976,45 @@
           const summary = `Chat WhatsApp: ${dayMsgs.length} mensajes — ${dayMsgs[0].text.slice(0, 60)}...`;
           if (!c.seguimientos) c.seguimientos = [];
           if (!c.seguimientos.find((s) => s.fecha === date)) {
-            c.seguimientos.push({ id: genId(), fecha: date, motivo: summary, resultado: "Importado desde WhatsApp", synced: false });
+            c.seguimientos.push({
+              id: genId(),
+              fecha: date,
+              motivo: summary,
+              resultado: "Importado desde WhatsApp",
+              synced: false,
+            });
           }
         }
         // Update suggested type if empty/default
-        const { error } = await db.from("clientes").update({
-          notas_detalle: c.notasDetalle,
-          seguimientos: c.seguimientos,
-          tipo: (c.tipo === "otro" || c.tipo === "importado") && analysis.suggestedType ? analysis.suggestedType : c.tipo,
-        }).eq("id", pendingWaImport.targetClientId);
+        const { error } = await db
+          .from("clientes")
+          .update({
+            notas_detalle: c.notasDetalle,
+            seguimientos: c.seguimientos,
+            tipo:
+              (c.tipo === "otro" || c.tipo === "importado") &&
+              analysis.suggestedType
+                ? analysis.suggestedType
+                : c.tipo,
+          })
+          .eq("id", pendingWaImport.targetClientId);
         showLoading(false);
         if (error) {
           showToast("Error al importar chat: " + error.message, "error");
           return;
         }
-        c.tipo = (c.tipo === "otro" || c.tipo === "importado") && analysis.suggestedType ? analysis.suggestedType : c.tipo;
+        c.tipo =
+          (c.tipo === "otro" || c.tipo === "importado") &&
+          analysis.suggestedType
+            ? analysis.suggestedType
+            : c.tipo;
         closeWaImportModal();
         renderTabs();
         renderDetail();
-        showToast(`Chat importado: ${msgs.length} mensajes, ${Object.keys(msgsByDate).length} seguimientos creados`, "success");
+        showToast(
+          `Chat importado: ${msgs.length} mensajes, ${Object.keys(msgsByDate).length} seguimientos creados`,
+          "success",
+        );
       }
 
       function parseWaDateToIso(dateStr) {
@@ -3818,16 +4035,46 @@
           showToast("No hay clientes para exportar", "warning");
           return;
         }
-        const headers = ["nombre", "telefono", "email", "tipo", "estado", "presupuesto", "zona", "notas", "origen", "referidor_nombre", "referidor_tel", "frecuencia_dias", "proximo_contacto", "seguimiento", "cantidad_seguimientos", "cantidad_notas", "created_at"];
+        const headers = [
+          "nombre",
+          "telefono",
+          "email",
+          "tipo",
+          "estado",
+          "presupuesto",
+          "zona",
+          "notas",
+          "origen",
+          "referidor_nombre",
+          "referidor_tel",
+          "frecuencia_dias",
+          "proximo_contacto",
+          "seguimiento",
+          "cantidad_seguimientos",
+          "cantidad_notas",
+          "created_at",
+        ];
         const escapeCsv = (val) => {
           const str = String(val || "").replace(/"/g, '""');
-          return str.includes(",") || str.includes("\n") || str.includes('"') ? `"${str}"` : str;
+          return str.includes(",") || str.includes("\n") || str.includes('"')
+            ? `"${str}"`
+            : str;
         };
         const rows = clients.map((c) =>
-          headers.map((h) => {
-            const map = { referidor_nombre: c.referidorNombre, referidor_tel: c.referidorTel, frecuencia_dias: c.frecuenciaDias, proximo_contacto: c.proximoContacto, cantidad_seguimientos: (c.seguimientos || []).length, cantidad_notas: (c.notasDetalle || []).length, created_at: c.createdAt };
-            return escapeCsv(map[h] !== undefined ? map[h] : c[h]);
-          }).join(",")
+          headers
+            .map((h) => {
+              const map = {
+                referidor_nombre: c.referidorNombre,
+                referidor_tel: c.referidorTel,
+                frecuencia_dias: c.frecuenciaDias,
+                proximo_contacto: c.proximoContacto,
+                cantidad_seguimientos: (c.seguimientos || []).length,
+                cantidad_notas: (c.notasDetalle || []).length,
+                created_at: c.createdAt,
+              };
+              return escapeCsv(map[h] !== undefined ? map[h] : c[h]);
+            })
+            .join(","),
         );
         const csv = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -4077,6 +4324,15 @@
           sr.classList.remove("open");
           return;
         }
+
+        // Calcula un "puntaje" de relevancia: 0 = mejor coincidencia, 2 = peor
+        function matchScore(c) {
+          const nombre = c.nombre.toLowerCase();
+          if (nombre.startsWith(q)) return 0; // Empieza con la búsqueda (ej: "ale" -> Alejandro)
+          if (nombre.includes(q)) return 1; // Contiene la búsqueda en el medio (ej: vALEria)
+          return 2; // Coincide solo por otro campo (tel, email, zona, etc.)
+        }
+
         const matches = clients
           .filter(
             (c) =>
@@ -4093,7 +4349,13 @@
                   (v) => typeof v === "string" && v.toLowerCase().includes(q),
                 )),
           )
+          .sort((a, b) => {
+            const diff = matchScore(a) - matchScore(b);
+            if (diff !== 0) return diff;
+            return a.nombre.localeCompare(b.nombre); // empate -> orden alfabético
+          })
           .slice(0, 8);
+
         sr.innerHTML =
           matches.length === 0
             ? `<div style="padding:14px;text-align:center;color:var(--text3);font-size:13px">Sin resultados</div>`
@@ -4102,12 +4364,12 @@
                   (
                     c,
                   ) => `<div class="search-result-item" onclick="goToClient(${c.id})">
-        <span class="badge badge-${c.tipo}" style="flex-shrink:0">${TIPO_LABELS[c.tipo] || c.tipo}</span>
-        <div>
-          <div style="font-size:13px;font-weight:500">${hlText(c.nombre, q)}</div>
-          <div style="font-size:11px;color:var(--text3)">${c.telefono || ""} ${c.zona ? "· " + c.zona : ""}</div>
-        </div>
-      </div>`,
+      <span class="badge badge-${c.tipo}" style="flex-shrink:0">${TIPO_LABELS[c.tipo] || c.tipo}</span>
+      <div>
+        <div style="font-size:13px;font-weight:500">${hlText(c.nombre, q)}</div>
+        <div style="font-size:11px;color:var(--text3)">${c.telefono || ""} ${c.zona ? "· " + c.zona : ""}</div>
+      </div>
+    </div>`,
                 )
                 .join("");
         sr.classList.add("open");
