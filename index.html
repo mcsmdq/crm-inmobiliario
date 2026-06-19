@@ -4353,8 +4353,8 @@
             const diff = matchScore(a) - matchScore(b);
             if (diff !== 0) return diff;
             return a.nombre.localeCompare(b.nombre); // empate -> orden alfabético
-          })
-          .slice(0, 8);
+          });
+        //.slice(0, 8);
 
         sr.innerHTML =
           matches.length === 0
